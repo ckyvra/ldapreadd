@@ -47,8 +47,10 @@ sed -nr 's/^dn: (.*)$/\1/p' $tmp_ldif >> $tmp_deletedn
 # We also decode DN with base64, ldapdelete support UTF-8 in dn
 sed -nr 's/^dn:: (.*)$/\1/p' $tmp_ldif | base64 -d - >> $tmp_deletedn
 
-echo "DN that will be delete"
-cat $tmp_deletedn
+if [ "$VERBOSE" ]; then
+	echo "DN that will be delete"
+	cat $tmp_deletedn
+fi
 
 object_number=$(cat "$tmp_deletedn" | wc -l)
 
