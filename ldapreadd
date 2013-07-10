@@ -5,8 +5,14 @@
 set -e
 set -u
 
+FORCE=${FORCE:-0}
+VERBOSE=${VERBOSE:-0}
+
 confirm(){
 	echo $1
+	if [ "$FORCE" -eq 1 ]; then
+		return 0;
+	fi
 	read -p'(yes/No) ' ANS
 	if [ "X$ANS" != "Xyes" ]; then
 		echo "Aborting";
@@ -58,7 +64,7 @@ sed -nr 's/^dn: (.*)$/\1/p' $tmp_ldif >> $tmp_deletedn
 # We also decode DN with base64, ldapdelete support UTF-8 in dn
 sed -nr 's/^dn:: (.*)$/\1/p' $tmp_ldif | base64 -d - >> $tmp_deletedn
 
-if [ "$VERBOSE" ]; then
+if [ "$VERBOSE" -eq 1 ]; then
 	echo "The following DN will be deleted and restored :"
 	cat $tmp_deletedn
 	echo
@@ -84,7 +90,7 @@ ldapadd $ldapadd_opts -f $tmp_ldif | grep -v '^$' > $ldapadd_output
 trap 'rm -f "$tmp_ldif" "$tmp_deletedn" "$ldapadd_output";' EXIT TERM INT
 
 dn_num=$(cat $ldapadd_output | wc -l)
-if [ "$VERBOSE" ]; then
+if [ "$VERBOSE" -eq 1 ]; then
 	echo
 	echo "The following DN has been restored :"
 	cat $ldapadd_output
