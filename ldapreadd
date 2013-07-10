@@ -49,7 +49,7 @@ ldap_attribute=$(echo "$@" | sed -nr "s/.*\) ([^(]*)$/\1/p")
 # and the list of the DNs to delete
 tmp_ldif=`tempfile`
 tmp_deletedn=`tempfile`
-trap 'rm -f "$tmp_ldif" "$tmp_deletedn";' EXIT TERM INT 
+trap 'rm -f "$tmp_ldif" "$tmp_deletedn";' EXIT TERM INT
 
 # 1. We export the ldif to re-import
 ldapsearch $ldapsearch_opts $ldap_filter > "$tmp_ldif"
@@ -77,9 +77,18 @@ ldapdelete $ldapadd_opts -f $tmp_deletedn
 
 # 3. We re-import the datas into the DIT and display number of the object re-add
 echo "Reimporting... ($object_number objects)"
+ldapadd_output=`tempfile`
 trap 'echo "Abort during reimporting, please manually re-import missing entries \
-from ldif : $tmp_ldif"; rm -f "$tmp_deletedn";' EXIT TERM INT
-ldapadd $ldapadd_opts -f $tmp_ldif
+from ldif : $tmp_ldif"; rm -f "$tmp_deletedn" "$ldapadd_output";' EXIT TERM INT
+ldapadd $ldapadd_opts -f $tmp_ldif | grep -v '^$' > $ldapadd_output
+trap 'rm -f "$tmp_ldif" "$tmp_deletedn" "$ldapadd_output";' EXIT TERM INT
 
-trap 'rm -f "$tmp_ldif" "$tmp_deletedn";' EXIT TERM INT
-echo "Successful reimport"
+dn_num=$(cat $ldapadd_output | wc -l)
+if [ "$VERBOSE" ]; then
+	echo
+	echo "The following DN has been restored :"
+	cat $ldapadd_output
+	echo
+fi
+
+echo "Successful reimport ($dn_num objects)"
