@@ -5,7 +5,7 @@
 set -e
 
 if [ $# -eq 0 ] || echo "$@" | grep -q -- '--help'; then
-	echo "$(basename $0)" use the same prototype as ldapsearch, ldapdelete and ldapadd
+	echo "$(basename $0) use the same prototype as ldapsearch, ldapdelete and ldapadd"
 	exit 0
 fi
 
