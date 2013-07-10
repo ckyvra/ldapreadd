@@ -19,7 +19,7 @@ ldapsearch_opts=$(echo "$@" | sed -nr "s/(.*) (\(.*\))[^(]*$/\1/p")
 
 # The options of ldapadd and ldapdelete differs from ldapsearch, so we must
 # remove some options like -b and -L
-ldapadd_opts=$(echo "$ldapsearch_opts" | sed -nr 's/(-b [^ ]+ |-[L]+ )//gp')
+ldapadd_opts=$(echo "$ldapsearch_opts" | sed -nr 's/(-b [^ ]+|-[L]+)//gp')
 
 # The heuristic to detect a filter, is the last option surrounded by
 # parenthesis, and must exist
