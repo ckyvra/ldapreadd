@@ -32,12 +32,12 @@ options as environment variables.
 FORCE=1 VERBOSE=1 ldapreadd -x -b "dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -H ldap://localhost -w password -LLL '(&(objectclass=*)(uid=user1))'
 ```
 
-Obviously please don't add spaces around = !
+Obviously please don't add spaces around the equal '=' !
 
 # Notes
 
-* The program will store the entries that match the filter with ldapsearch,
-  delete them with ldapdelete, and re-import with the command ldapadd.
+* The program will store the entries that match the filter with **ldapsearch**,
+  delete them with **ldapdelete**, and re-import with the command **ldapadd**.
 
 * This parameters will be interpreted by **ldapsearch**, and the options *-b*
   and *-L* will be automatically remove for the command **ldapdelete** and
