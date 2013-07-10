@@ -21,6 +21,17 @@ This is an example of the default usage :
 ldapreadd -x -b "dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -H ldap://localhost -w password -LLL '(&(objectclass=*)(uid=user1))'
 ```
 
+As we don't want to alter the default parameter of the ldap utilities, we set options as environment variables.
+
+* **FORCE=1** :  to by pass the confirmation mode, useful for scripting
+* **VERBOSE=1** to display more informations, like list of DNs deleted and restored
+
+```bash
+FORCE=1 VERBOSE=1 ldapreadd -x -b "dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -H ldap://localhost -w password -LLL '(&(objectclass=*)(uid=user1))'
+```
+
+Obviously please don't add spaces around = !
+
 # Notes
 
 * The program will store the entries that match the filter with ldapsearch,
