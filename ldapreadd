@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Christophe Kyvrakidis (c) 2013
 
@@ -13,7 +13,8 @@ confirm(){
 	if [ "$FORCE" -eq 1 ]; then
 		return 0;
 	fi
-	read -p'(yes/No) ' ANS
+	echo -n '(yes/No) '
+	read ANS
 	if [ "X$ANS" != "Xyes" ]; then
 		echo "Aborting";
 		exit 0;
