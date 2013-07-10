@@ -3,6 +3,17 @@
 # Christophe Kyvrakidis (c) 2013
 
 set -e
+set -u
+
+confirm(){
+	echo $1
+	read -p'(yes/No) ' ANS
+	if [ "X$ANS" != "Xyes" ]; then
+		echo "Aborting";
+		exit 0;
+	fi;
+}
+
 
 if [ $# -eq 0 ] || echo "$@" | grep -q -- '--help'; then
 	echo "$(basename $0) use the same prototype as ldapsearch, ldapdelete and ldapadd"
@@ -48,11 +59,14 @@ sed -nr 's/^dn: (.*)$/\1/p' $tmp_ldif >> $tmp_deletedn
 sed -nr 's/^dn:: (.*)$/\1/p' $tmp_ldif | base64 -d - >> $tmp_deletedn
 
 if [ "$VERBOSE" ]; then
-	echo "DN that will be delete"
+	echo "The following DN will be deleted and restored :"
 	cat $tmp_deletedn
+	echo
 fi
 
 object_number=$(cat "$tmp_deletedn" | wc -l)
+
+confirm "Delete and restore ($object_number objects)"
 
 # 2. We effectively delete the filter passed
 # ldapdelete and ldapadd have no '-b' option and neither '-L -LLL' option
