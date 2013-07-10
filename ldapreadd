@@ -2,6 +2,11 @@
 
 # Christophe Kyvrakidis (c) 2013
 
+# The goal is to re-add an export of an OpenLDAP DIT into its own DIT, without
+# using slapcat and slapadd. You can select only a part of your DIT you want to
+# reimport by using regular OpenLDAP filters.
+
+
 set -e
 set -u
 
@@ -22,14 +27,11 @@ confirm(){
 }
 
 
+# We override only --help option
 if [ $# -eq 0 ] || echo "$@" | grep -q -- '--help'; then
 	echo "$(basename $0) use the same prototype as ldapsearch"
 	exit 0
 fi
-
-# The goal is to re-add a export of an OpenLDAP DIT into its own DIT, without
-# using slapcat and slapadd.
-# Because slapadd doesn't support adding overlay like memberof
 
 # First we extract the basic options options to pass to ldapsearch, ldapdelete
 # and ldapadd
