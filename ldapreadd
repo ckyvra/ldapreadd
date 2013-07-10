@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# Christophe Kyvrakidis (c) 2013
+
+set -e
+
+if [ $# -eq 0 ] || echo "$@" | grep -q -- '--help'; then
+	echo "$(basename $0)" use the same prototype as ldapsearch, ldapdelete and ldapadd
+	exit 0
+fi
+
+# The goal is to re-add a export of an OpenLDAP DIT into its own DIT, without
+# using slapcat and slapadd.
+# Because slapadd doesn't support adding overlay like memberof
+
+# First we extract the basic options options to pass to ldapsearch, ldapdelete
+# and ldapadd
+ldapsearch_opts=$(echo "$@" | sed -nr "s/(.*) (\(.*\))[^(]*$/\1/p")
+
+# The options of ldapadd and ldapdelete differs from ldapsearch, so we must
+# remove some options like -b and -L
+ldapadd_opts=$(echo "$ldapsearch_opts" | sed -nr 's/(-b [^ ]+ |-[L]+ )//gp')
+
+# The heuristic to detect a filter, is the last option surrounded by
+# parenthesis, and must exist
+ldap_filter=$(echo "$@" | sed -nr "s/.* (\(.*\))[^(]*$/\1/p")
+
+# The heuristic to detect ldap attribute
+ldap_attribute=$(echo "$@" | sed -nr "s/.*\) ([^(]*)$/\1/p")
+
+# We must confirm manually the operation, because we have a deletion of datas
+# The following variable FORCE set to YES, can by pass the confirmation, in
+# case of script. We don't want to add other options, that would distrub the
+# ldapsearch existing one.
+
+
+# We save into a temporary file, the ldif export that will be re-add to the DIT
+# and the list of the DNs to delete
+tmp_ldif=`tempfile`
+tmp_deletedn=`tempfile`
+trap 'rm -f "$tmp_ldif" "$tmp_deletedn";' EXIT TERM INT 
+
+# 1. We export the ldif to re-import
+ldapsearch $ldapsearch_opts $ldap_filter > "$tmp_ldif"
+
+sed -nr 's/^dn: (.*)$/\1/p' $tmp_ldif >> $tmp_deletedn
+# We also decode DN with base64, ldapdelete support UTF-8 in dn
+sed -nr 's/^dn:: (.*)$/\1/p' $tmp_ldif | base64 -d - >> $tmp_deletedn
+
+echo "DN that will be delete"
+cat $tmp_deletedn
+
+object_number=$(cat "$tmp_deletedn" | wc -l)
+
+# 2. We effectively delete the filter passed
+# ldapdelete and ldapadd have no '-b' option and neither '-L -LLL' option
+echo "Deleting... ($object_number objects)"
+trap 'echo "Abort during deletion, please manually re-import ldif : $tmp_ldif";\
+	rm -f "$tmp_deletedn";' EXIT TERM INT
+ldapdelete $ldapadd_opts -f $tmp_deletedn
+
+# 3. We re-import the datas into the DIT and display number of the object re-add
+echo "Reimporting... ($object_number objects)"
+trap 'echo "Abort during reimporting, please manually re-import missing entries \
+from ldif : $tmp_ldif"; rm -f "$tmp_deletedn";' EXIT TERM INT
+ldapadd $ldapadd_opts -f $tmp_ldif
+
+trap 'rm -f "$tmp_ldif" "$tmp_deletedn";' EXIT TERM INT
+echo "Successful reimport"
