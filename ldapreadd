@@ -22,7 +22,7 @@ confirm(){
 
 
 if [ $# -eq 0 ] || echo "$@" | grep -q -- '--help'; then
-	echo "$(basename $0) use the same prototype as ldapsearch, ldapdelete and ldapadd"
+	echo "$(basename $0) use the same prototype as ldapsearch"
 	exit 0
 fi
 
@@ -77,18 +77,21 @@ confirm "Delete and restore ($object_number objects)"
 # 2. We effectively delete the filter passed
 # ldapdelete and ldapadd have no '-b' option and neither '-L -LLL' option
 echo "Deleting... ($object_number objects)"
-trap 'echo "Abort during deletion, please manually re-import ldif : $tmp_ldif";\
-	rm -f "$tmp_deletedn";' EXIT TERM INT
+trap 'echo "Abort during deletion, please manually re-import ldif : \
+$tmp_ldif"; rm -f "$tmp_deletedn";' EXIT TERM INT
 ldapdelete $ldapadd_opts -f $tmp_deletedn
 
-# 3. We re-import the datas into the DIT and display number of the object re-add
+# 3. We re-import the datas into the DIT and display number of the object
+# re-add
 echo "Reimporting... ($object_number objects)"
 ldapadd_output=`tempfile`
-trap 'echo "Abort during reimporting, please manually re-import missing entries \
-from ldif : $tmp_ldif"; rm -f "$tmp_deletedn" "$ldapadd_output";' EXIT TERM INT
+trap 'echo "Abort during reimporting, please manually re-import missing \
+entries from ldif : $tmp_ldif"; rm -f "$tmp_deletedn" "$ldapadd_output";' \
+EXIT TERM INT
 ldapadd $ldapadd_opts -f $tmp_ldif | grep -v '^$' > $ldapadd_output
 trap 'rm -f "$tmp_ldif" "$tmp_deletedn" "$ldapadd_output";' EXIT TERM INT
 
+# 4. displaying results
 dn_num=$(cat $ldapadd_output | wc -l)
 if [ "$VERBOSE" -eq 1 ]; then
 	echo
